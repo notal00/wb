@@ -252,14 +252,19 @@
     .card-counts { display: flex; gap: 14px; }
 
     .rt-badge {
-      display: inline-block;
+      position: absolute;
+      top: 14px; right: 14px;
       font-size: 10px;
       letter-spacing: 0.1em;
       color: var(--accent);
       border: 1px solid var(--accent-soft);
       padding: 1px 6px;
       border-radius: 1px;
-      margin-bottom: 10px;
+      margin-bottom: 0;
+    }
+
+    .card:has(.rt-badge) {
+      padding-top: 38px;
     }
 
     /* ─── LOAD MORE / STATES ─── */
