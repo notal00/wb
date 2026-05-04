@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>archive</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400&family=Noto+Serif+SC:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #faf9f7;
+      --bg2: #f0ede8;
+      --text: #1c1b1a;
+      --text2: #7a756f;
+      --accent: #9b8bb4;
+      --accent-soft: #c8bcdc;
+      --border: #dedad4;
+      --card: #ffffff;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #131211;
+        --bg2: #1c1a18;
+        --text: #e5e0d8;
+        --text2: #7a7570;
+        --accent: #b8a8d0;
+        --accent-soft: #6a5a80;
+        --border: #2c2a26;
+        --card: #1c1a18;
+      }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Noto Serif SC', serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* ─── PASSWORD ─── */
+    #pw-screen {
+      position: fixed; inset: 0;
+      background: var(--bg);
+      display: flex; align-items: center; justify-content: center;
+      z-index: 100;
+      overflow: hidden;
+    }
+
+    .pw-rings {
+      position: absolute;
+      display: flex; align-items: center; justify-content: center;
+      inset: 0;
+    }
+    .pw-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+    }
+    .pw-ring:nth-child(1) { width: 160px; height: 160px; }
+    .pw-ring:nth-child(2) { width: 280px; height: 280px; }
+    .pw-ring:nth-child(3) { width: 420px; height: 420px; opacity: 0.5; }
+    .pw-ring:nth-child(4) { width: 580px; height: 580px; opacity: 0.25; }
+
+    .pw-box {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 20px;
+    }
+
+    .pw-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: 30px;
+      letter-spacing: 0.2em;
+      color: var(--text);
+    }
+
+    .pw-label {
+      font-size: 11px;
+      letter-spacing: 0.25em;
+      color: var(--text2);
+      text-transform: lowercase;
+    }
+
+    .pw-input {
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      color: var(--text);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 22px;
+      letter-spacing: 0.4em;
+      text-align: center;
+      padding: 8px 0;
+      width: 140px;
+      outline: none;
+      transition: border-color 0.3s;
+    }
+    .pw-input:focus { border-color: var(--accent); }
+
+    .pw-hint {
+      font-size: 11px;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      height: 14px;
+      transition: opacity 0.3s;
+    }
+
+    /* ─── APP SHELL ─── */
+    #app { display: none; }
+    #app.on { display: block; }
+
+    .wrap { max-width: 660px; margin: 0 auto; padding: 0 18px 80px; }
+
+    /* ─── HEADER ─── */
+    .hd {
+      padding: 52px 0 28px;
+    }
+    .hd-title {
+      font-family: 'Cormorant Garamond', serif;
+      font-weight: 300;
+      font-size: 34px;
+      letter-spacing: 0.12em;
+    }
+    .hd-sub {
+      margin-top: 5px;
+      font-size: 11px;
+      letter-spacing: 0.2em;
+      color: var(--text2);
+    }
+
+    /* ─── DIVIDER ─── */
+    .div {
+      display: flex; align-items: center; gap: 10px;
+      margin: 22px 0;
+    }
+    .div::before, .div::after {
+      content: ''; flex: 1; height: 1px; background: var(--border);
+    }
+    .div-gem {
+      width: 6px; height: 6px;
+      border: 1px solid var(--accent-soft);
+      transform: rotate(45deg);
+      flex-shrink: 0;
+    }
+
+    /* ─── CONTROLS ─── */
+    .ctrl { display: flex; flex-direction: column; gap: 10px; margin-bottom: 28px; }
+
+    .search {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      color: var(--text);
+      font-family: 'Noto Serif SC', serif;
+      font-size: 14px;
+      padding: 10px 14px;
+      width: 100%;
+      outline: none;
+      transition: border-color 0.25s;
+    }
+    .search::placeholder { color: var(--text2); }
+    .search:focus { border-color: var(--accent); }
+
+    .filters { display: flex; gap: 8px; }
+    .fsel {
+      flex: 1;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      color: var(--text);
+      font-family: 'Noto Serif SC', serif;
+      font-size: 13px;
+      padding: 8px 10px;
+      outline: none;
+      cursor: pointer;
+      transition: border-color 0.25s;
+    }
+    .fsel:focus { border-color: var(--accent); }
+
+    /* ─── POST LIST ─── */
+    #post-list { display: flex; flex-direction: column; gap: 8px; }
+
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      padding: 18px 18px 14px;
+      cursor: pointer;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      left: 0; top: 0; bottom: 0;
+      width: 2px;
+      background: var(--accent);
+      transform: scaleY(0);
+      transition: transform 0.2s;
+      transform-origin: bottom;
+    }
+    .card:hover { border-color: var(--accent-soft); }
+    .card:hover::before { transform: scaleY(1); }
+
+    .card-text {
+      font-size: 14px;
+      line-height: 1.95;
+      color: var(--text);
+      display: -webkit-box;
+      -webkit-line-clamp: 4;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 12px;
+      word-break: break-word;
+    }
+
+    .card-media {
+      display: flex; gap: 5px; flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .card-media img {
+      width: 68px; height: 68px;
+      object-fit: cover;
+      border-radius: 2px;
+      background: var(--bg2);
+    }
+    .card-media .vid-thumb {
+      width: 68px; height: 68px;
+      background: var(--bg2);
+      border-radius: 2px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text2);
+      font-size: 18px;
+    }
+
+    .card-meta {
+      display: flex; align-items: center;
+      font-size: 11px;
+      letter-spacing: 0.05em;
+      color: var(--text2);
+    }
+    .card-date { flex: 1; }
+    .card-counts { display: flex; gap: 14px; }
+
+    .rt-badge {
+      position: absolute;
+      top: 14px; right: 14px;
+      font-size: 10px;
+      letter-spacing: 0.1em;
+      color: var(--accent);
+      border: 1px solid var(--accent-soft);
+      padding: 1px 6px;
+      border-radius: 1px;
+    }
+
+    /* ─── LOAD MORE / STATES ─── */
+    #load-more { margin-top: 28px; text-align: center; display: none; }
+    .more-btn {
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 2px;
+      color: var(--text2);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 14px;
+      letter-spacing: 0.2em;
+      padding: 10px 28px;
+      cursor: pointer;
+      transition: border-color 0.25s, color 0.25s;
+    }
+    .more-btn:hover { border-color: var(--accent); color: var(--accent); }
+
+    .ph {
+      text-align: center;
+      padding: 56px 0;
+      font-size: 12px;
+      letter-spacing: 0.15em;
+      color: var(--text2);
+    }
+
+    /* ─── DETAIL ─── */
+    #detail { display: none; }
+    #detail.on { display: block; }
+
+    .back {
+      display: inline-flex; align-items: center; gap: 8px;
+      background: transparent; border: none;
+      color: var(--text2);
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 15px;
+      letter-spacing: 0.1em;
+      cursor: pointer;
+      padding: 0;
+      margin: 36px 0 22px;
+      transition: color 0.2s;
+    }
+    .back:hover { color: var(--accent); }
+
+    .d-text {
+      font-size: 15px;
+      line-height: 2.05;
+      color: var(--text);
+      white-space: pre-wrap;
+      word-break: break-word;
+      margin-bottom: 18px;
+    }
+
+    .d-media {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
+      margin-bottom: 18px;
+    }
+    .d-media img {
+      width: 100%; aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: 2px;
+      background: var(--bg2);
+      cursor: pointer;
+    }
+    .d-media .vid-block {
+      aspect-ratio: 1;
+      background: var(--bg2);
+      border-radius: 2px;
+      display: flex; align-items: center; justify-content: center;
+      color: var(--text2);
+      font-size: 24px;
+    }
+
+    .d-meta {
+      display: flex; gap: 16px;
+      font-size: 12px;
+      letter-spacing: 0.05em;
+      color: var(--text2);
+      margin-bottom: 28px;
+    }
+
+    /* ─── TABS ─── */
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: 22px;
+    }
+    .tab {
+      background: transparent; border: none;
+      border-bottom: 2px solid transparent;
+      color: var(--text2);
+      font-family: 'Noto Serif SC', serif;
+      font-size: 13px;
+      letter-spacing: 0.1em;
+      padding: 10px 20px 10px 0;
+      cursor: pointer;
+      margin-bottom: -1px;
+      transition: color 0.2s, border-color 0.2s;
+    }
+    .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+    /* ─── COMMENTS ─── */
+    .cmt-list { display: flex; flex-direction: column; gap: 22px; }
+
+    .cmt {
+      display: flex; flex-direction: column; gap: 3px;
+    }
+    .cmt.child {
+      margin-left: 20px;
+      padding-left: 12px;
+      border-left: 1px solid var(--border);
+    }
+    .cmt-user { font-size: 12px; color: var(--accent); letter-spacing: 0.05em; }
+    .cmt-body { font-size: 14px; line-height: 1.85; color: var(--text); word-break: break-word; }
+    .cmt-date { font-size: 11px; color: var(--text2); }
+    .cmt-kids { margin-top: 14px; display: flex; flex-direction: column; gap: 14px; }
+
+    /* ─── REPOSTS ─── */
+    .rp-list { display: flex; flex-direction: column; gap: 16px; }
+    .rp {
+      padding-left: 13px;
+      border-left: 2px solid var(--border);
+    }
+    .rp-user { font-size: 12px; color: var(--accent); letter-spacing: 0.05em; margin-bottom: 3px; }
+    .rp-body { font-size: 14px; line-height: 1.85; color: var(--text); word-break: break-word; }
+    .rp-date { font-size: 11px; color: var(--text2); margin-top: 4px; }
+
+    /* ─── LIGHTBOX ─── */
+    #lightbox {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.88);
+      z-index: 200;
+      align-items: center; justify-content: center;
+    }
+    #lightbox.on { display: flex; }
+    #lightbox img { max-width: 94vw; max-height: 90vh; object-fit: contain; border-radius: 2px; }
+    #lightbox::after {
+      content: '×';
+      position: absolute; top: 20px; right: 24px;
+      color: rgba(255,255,255,0.6);
+      font-size: 28px;
+      cursor: pointer;
+      font-family: serif;
+    }
+
+    /* ─── BG DECO ─── */
+    .bg-arc {
+      position: fixed; pointer-events: none; z-index: 0;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      opacity: 0.25;
+    }
+    .bg-arc-1 { width: 220px; height: 220px; top: -70px; right: -60px; }
+    .bg-arc-2 { width: 180px; height: 180px; bottom: 80px; left: -60px; }
+  </style>
+</head>
+<body>
+
+<div class="bg-arc bg-arc-1"></div>
+<div class="bg-arc bg-arc-2"></div>
+
+<!-- PASSWORD -->
+<div id="pw-screen">
+  <div class="pw-rings">
+    <div class="pw-ring"></div>
+    <div class="pw-ring"></div>
+    <div class="pw-ring"></div>
+    <div class="pw-ring"></div>
+  </div>
+  <div class="pw-box">
+    <div class="pw-title">archive</div>
+    <div class="pw-label">私人存档</div>
+    <input id="pw-input" class="pw-input" type="password" placeholder="···" autocomplete="off" />
+    <div id="pw-hint" class="pw-hint"></div>
+  </div>
+</div>
+
+<!-- APP -->
+<div id="app">
+  <!-- LIST VIEW -->
+  <div id="list-view">
+    <div class="wrap">
+      <header class="hd">
+        <div class="hd-title">archive</div>
+        <div class="hd-sub">微博存档 · 纷乱-</div>
+      </header>
+
+      <div class="div"><div class="div-gem"></div></div>
+
+      <div class="ctrl">
+        <input id="search" class="search" type="search" placeholder="搜索正文…" />
+        <div class="filters">
+          <select id="yr" class="fsel">
+            <option value="">全部年份</option>
+          </select>
+          <select id="mo" class="fsel">
+            <option value="">全部月份</option>
+            <option value="01">一月</option><option value="02">二月</option>
+            <option value="03">三月</option><option value="04">四月</option>
+            <option value="05">五月</option><option value="06">六月</option>
+            <option value="07">七月</option><option value="08">八月</option>
+            <option value="09">九月</option><option value="10">十月</option>
+            <option value="11">十一月</option><option value="12">十二月</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="post-list"><div class="ph">loading…</div></div>
+      <div id="load-more"><button class="more-btn" id="more-btn">更多</button></div>
+    </div>
+  </div>
+
+  <!-- DETAIL VIEW -->
+  <div id="detail">
+    <div class="wrap">
+      <button class="back" id="back-btn">← 返回</button>
+      <div id="d-area"></div>
+      <div class="tabs">
+        <button class="tab active" id="t-cmt" data-tab="comments">评论</button>
+        <button class="tab" id="t-rp" data-tab="reposts">转发</button>
+      </div>
+      <div id="tab-body"><div class="ph">loading…</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox"><img id="lb-img" src="" alt="" /></div>
+
+<script>
+const SB = 'https://zkpctzxyqpiiqxvnmauo.supabase.co';
+const KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InprcGN0enh5cXBpaXF4dm5tYXVvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzUzNDkxNDAsImV4cCI6MjA5MDkyNTE0MH0.Z7WdneCs_vJOblWho1neuMLI86h1FrdNqi6N2-DI4ZQ';
+const PW = 'ntl0';
+const PG = 20;
+const H = { 'apikey': KEY, 'Authorization': `Bearer ${KEY}` };
+
+async function sb(path) {
+  const r = await fetch(SB + '/rest/v1/' + path, { headers: H });
+  return r.json();
+}
+
+// ── Password ──
+const pws = document.getElementById('pw-screen');
+const pwi = document.getElementById('pw-input');
+const pwh = document.getElementById('pw-hint');
+
+if (sessionStorage.getItem('wba') === '1') unlock();
+
+pwi.addEventListener('keydown', e => { if (e.key === 'Enter') tryPw(); });
+
+function tryPw() {
+  if (pwi.value === PW) {
+    sessionStorage.setItem('wba', '1');
+    unlock();
+  } else {
+    pwh.textContent = '密码不正确';
+    pwi.value = '';
+    setTimeout(() => pwh.textContent = '', 2000);
+  }
+}
+
+function unlock() {
+  pws.style.display = 'none';
+  document.getElementById('app').classList.add('on');
+  init();
+}
+
+// ── State ──
+let offset = 0, q = '', yr = '', mo = '', busy = false, more = true;
+let detailId = null, curTab = 'comments';
+
+// ── Init ──
+async function init() {
+  const rows = await sb('posts?select=created_at&order=created_at.asc');
+  const years = [...new Set(rows.map(r => r.created_at?.slice(0,4)).filter(Boolean))];
+  const ysel = document.getElementById('yr');
+  years.forEach(y => {
+    const o = document.createElement('option');
+    o.value = y; o.textContent = y + ' 年';
+    ysel.appendChild(o);
+  });
+
+  let st;
+  document.getElementById('search').addEventListener('input', e => {
+    clearTimeout(st);
+    st = setTimeout(() => { q = e.target.value.trim(); reload(); }, 380);
+  });
+  document.getElementById('yr').addEventListener('change', e => { yr = e.target.value; reload(); });
+  document.getElementById('mo').addEventListener('change', e => { mo = e.target.value; reload(); });
+  document.getElementById('more-btn').addEventListener('click', () => loadPosts(false));
+  document.getElementById('back-btn').addEventListener('click', showList);
+  document.getElementById('t-cmt').addEventListener('click', () => switchTab('comments'));
+  document.getElementById('t-rp').addEventListener('click', () => switchTab('reposts'));
+  document.getElementById('lightbox').addEventListener('click', () => document.getElementById('lightbox').classList.remove('on'));
+
+  reload();
+}
+
+function reload() { offset = 0; more = true; loadPosts(true); }
+
+async function loadPosts(reset) {
+  if (busy) return;
+  busy = true;
+
+  let url = `posts?select=id,content,created_at,reposts_count,comments_count,is_repost&order=created_at.desc&limit=${PG}&offset=${offset}`;
+  if (q) url += `&content=ilike.*${encodeURIComponent(q)}*`;
+  if (yr && mo) {
+    const last = new Date(+yr, +mo, 0).getDate();
+    url += `&created_at=gte.${yr}-${mo}-01T00:00:00&created_at=lte.${yr}-${mo}-${last}T23:59:59`;
+  } else if (yr) {
+    url += `&created_at=gte.${yr}-01-01T00:00:00&created_at=lte.${yr}-12-31T23:59:59`;
+  }
+
+  const posts = await sb(url);
+  const list = document.getElementById('post-list');
+  if (reset) list.innerHTML = '';
+
+  if (!Array.isArray(posts) || (posts.length === 0 && reset)) {
+    list.innerHTML = '<div class="ph">暂无内容</div>';
+    document.getElementById('load-more').style.display = 'none';
+    busy = false; return;
+  }
+
+  // fetch media for this batch
+  const ids = posts.map(p => p.id);
+  let mmap = {};
+  if (ids.length) {
+    const mdata = await sb(`media?post_id=in.(${ids.join(',')})&select=post_id,type,local_path,url`);
+    if (Array.isArray(mdata)) {
+      mdata.forEach(m => { (mmap[m.post_id] = mmap[m.post_id] || []).push(m); });
+    }
+  }
+
+  posts.forEach(p => list.appendChild(makeCard(p, mmap[p.id] || [])));
+
+  more = posts.length === PG;
+  offset += posts.length;
+  document.getElementById('load-more').style.display = more ? 'block' : 'none';
+  busy = false;
+}
+
+function makeCard(p, media) {
+  const el = document.createElement('div');
+  el.className = 'card';
+
+  const txt = strip(p.content || '');
+  let mhtml = '';
+  if (media.length) {
+    mhtml = '<div class="card-media">' + media.slice(0,4).map(m => {
+      const src = m.local_path || m.url;
+      return m.type === 'image'
+        ? `<img src="${src}" loading="lazy" alt="" onerror="this.style.display='none'">`
+        : `<div class="vid-thumb">▶</div>`;
+    }).join('') + '</div>';
+  }
+
+  el.innerHTML = `
+    ${p.is_repost ? '<div class="rt-badge">转发</div>' : ''}
+    <div class="card-text">${esc(txt)}</div>
+    ${mhtml}
+    <div class="card-meta">
+      <span class="card-date">${fmtDate(p.created_at)}</span>
+      <span class="card-counts">
+        <span>评 ${p.comments_count||0}</span>
+        <span>转 ${p.reposts_count||0}</span>
+      </span>
+    </div>
+  `;
+  el.addEventListener('click', () => openDetail(p.id));
+  return el;
+}
+
+// ── Detail ──
+async function openDetail(id) {
+  detailId = id;
+  curTab = 'comments';
+  document.getElementById('list-view').style.display = 'none';
+  document.getElementById('detail').classList.add('on');
+  document.getElementById('t-cmt').classList.add('active');
+  document.getElementById('t-rp').classList.remove('active');
+  document.getElementById('d-area').innerHTML = '<div class="ph">loading…</div>';
+  document.getElementById('tab-body').innerHTML = '<div class="ph">loading…</div>';
+  window.scrollTo(0, 0);
+
+  const [posts, media] = await Promise.all([
+    sb(`posts?id=eq.${id}&select=*`),
+    sb(`media?post_id=eq.${id}&select=*`)
+  ]);
+  renderDetail(posts[0], Array.isArray(media) ? media : []);
+  loadTab('comments');
+}
+
+function renderDetail(p, media) {
+  let mhtml = '';
+  if (media.length) {
+    mhtml = '<div class="d-media">' + media.map(m => {
+      const src = m.local_path || m.url;
+      return m.type === 'image'
+        ? `<img src="${src}" alt="" onclick="showLb('${src.replace(/'/g,"\\'")}');" onerror="this.style.display='none'">`
+        : `<div class="vid-block">▶</div>`;
+    }).join('') + '</div>';
+  }
+
+  document.getElementById('d-area').innerHTML = `
+    <div class="d-text">${esc(strip(p.content||''))}</div>
+    ${mhtml}
+    <div class="d-meta">
+      <span>${fmtDate(p.created_at)}</span>
+      <span>评论 ${p.comments_count||0}</span>
+      <span>转发 ${p.reposts_count||0}</span>
+    </div>
+    <div class="div" style="margin-bottom:0"><div class="div-gem"></div></div>
+  `;
+}
+
+async function loadTab(tab) {
+  const body = document.getElementById('tab-body');
+  body.innerHTML = '<div class="ph">loading…</div>';
+
+  if (tab === 'comments') {
+    const data = await sb(`comments_wb?post_id=eq.${detailId}&select=*&order=created_at.asc`);
+    renderComments(Array.isArray(data) ? data : []);
+  } else {
+    const data = await sb(`reposts?post_id=eq.${detailId}&select=*&order=created_at.asc`);
+    renderReposts(Array.isArray(data) ? data : []);
+  }
+}
+
+function renderComments(all) {
+  const body = document.getElementById('tab-body');
+  const top = all.filter(c => !c.parent_id);
+  const kids = all.filter(c => c.parent_id);
+
+  if (!top.length) { body.innerHTML = '<div class="ph">暂无评论</div>'; return; }
+
+  const ul = document.createElement('div');
+  ul.className = 'cmt-list';
+
+  top.forEach(c => {
+    const item = cmtEl(c, false);
+    const ch = kids.filter(k => String(k.parent_id) === String(c.id));
+    if (ch.length) {
+      const ck = document.createElement('div');
+      ck.className = 'cmt-kids';
+      ch.forEach(k => ck.appendChild(cmtEl(k, true)));
+      item.appendChild(ck);
+    }
+    ul.appendChild(item);
+  });
+
+  body.innerHTML = '';
+  body.appendChild(ul);
+}
+
+function cmtEl(c, isChild) {
+  const el = document.createElement('div');
+  el.className = 'cmt' + (isChild ? ' child' : '');
+  el.innerHTML = `
+    <div class="cmt-user">${esc(c.user_name||'')}</div>
+    <div class="cmt-body">${esc(c.content||'')}</div>
+    <div class="cmt-date">${fmtDate(c.created_at)}</div>
+  `;
+  return el;
+}
+
+function renderReposts(data) {
+  const body = document.getElementById('tab-body');
+  if (!data.length) { body.innerHTML = '<div class="ph">暂无转发</div>'; return; }
+
+  const ul = document.createElement('div');
+  ul.className = 'rp-list';
+  data.forEach(r => {
+    const el = document.createElement('div');
+    el.className = 'rp';
+    el.innerHTML = `
+      <div class="rp-user">${esc(r.user_name||'')}</div>
+      <div class="rp-body">${esc(r.content||'')}</div>
+      <div class="rp-date">${fmtDate(r.created_at)}</div>
+    `;
+    ul.appendChild(el);
+  });
+  body.innerHTML = '';
+  body.appendChild(ul);
+}
+
+function switchTab(tab) {
+  curTab = tab;
+  document.getElementById('t-cmt').classList.toggle('active', tab === 'comments');
+  document.getElementById('t-rp').classList.toggle('active', tab === 'reposts');
+  loadTab(tab);
+}
+
+function showList() {
+  document.getElementById('detail').classList.remove('on');
+  document.getElementById('list-view').style.display = 'block';
+}
+
+function showLb(src) {
+  document.getElementById('lb-img').src = src;
+  document.getElementById('lightbox').classList.add('on');
+}
+
+// ── Helpers ──
+function strip(h) { return h.replace(/<[^>]+>/g,'').replace(/\s+/g,' ').trim(); }
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function fmtDate(s) {
+  if (!s) return '';
+  const d = new Date(s);
+  return `${d.getFullYear()}.${pad(d.getMonth()+1)}.${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function pad(n) { return String(n).padStart(2,'0'); }
+</script>
+</body>
+</html>
